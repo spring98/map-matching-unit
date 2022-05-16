@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Demo: Get started with the Map Matching API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+
+  <body>
+    <div class="kalman">칼만필터 테스트</div>
+  </body>
+
+  <script>
+    console.log("시작");
+    var A = 1;
+    var H = 1;
+    var Q = 0;
+    var R = 4;
+    var x = 14;
+    var P = 6;
+
+    Xsaved = [];
+    Zsaved = [];
+    for (var i = 0; i < 100; i++) {
+      const randomInteger = getVolt();
+      const filteredInteger = simpleKalman(randomInteger);
+
+      Xsaved.push(randomInteger);
+      Zsaved.push(filteredInteger);
+    }
+    console.log(Xsaved);
+    console.log(Zsaved);
+
+    function getVolt() {
+      return Math.floor(Math.random() * 20);
+    }
+
+    function simpleKalman(z) {
+      xp = A * x;
+      Pp = A * P * A + Q;
+      K = (Pp * H) / (H * Pp * H + R);
+      x = xp + K * (z - H * xp);
+      P = Pp - K * H * Pp;
+
+      //   console.log("sadf", A);
+
+      return x;
+    }
+  </script>
+</html>

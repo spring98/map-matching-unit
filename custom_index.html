@@ -146,27 +146,35 @@
       map.addControl(draw);
 
       // 지도에 리스너 설치
-      // draw.create 라는 트리거에 updateRoute 반응
-      map.on("draw.create", updateRoute);
-      
-      // draw.update 라는 트리거에 updateRoute 반응
-      map.on("draw.update", updateRoute);
-      
-      // draw.delete 라는 트리거에 removeRoute 반응
-      map.on("draw.delete", removeRoute);
+      map.on("load", updateRoute);
+      map.on("click", updateRoute);
 
       // Use the coordinates you just drew to make the Map Matching API request
       function updateRoute() {
         // Overwrite any existing layers
         removeRoute();
 
-        // Set the profile
+        // profile 의 종류 : walking, driving, cycling, driving-traffic
         const profile = "driving";
 
         // Get the coordinates
         const data = draw.getAll();
         const lastFeature = data.features.length - 1;
-        const coords = data.features[lastFeature].geometry.coordinates;
+
+        console.log("클릭 좌표 시작");
+        console.log(data.features[lastFeature].geometry.coordinates);
+        console.log("클릭 좌표 끝");
+
+        // const coords = data.features[lastFeature].geometry.coordinates;
+        const coords = [
+          [126.6520028182398, 37.445300540435426],
+          [126.65461255109909, 37.443638138623655],
+          [126.65843611319724, 37.44296353025106],
+          [126.66059066009325, 37.44106013812579],
+        ];
+        // console.log("하이하이");
+        // console.log(coords);
+        // console.log("바이바이");
 
         // Format the coordinates
         const newCoords = coords.join(";");
@@ -203,24 +211,7 @@
         getInstructions(response.matchings[0]);
       }
 
-      function getInstructions(data) {
-        // Target the sidebar to add the instructions
-        const directions = document.getElementById("directions");
-        let tripDirections = "";
-
-        // Output the instructions for each step of each leg in the response object
-        for (const leg of data.legs) {
-          const steps = leg.steps;
-          for (const step of steps) {
-            tripDirections += `<li>${step.maneuver.instruction}</li>`;
-          }
-        }
-
-        directions.innerHTML = `<p><strong>Trip duration: ${Math.floor(
-          data.duration / 60
-        )} min.</strong></p><ol>${tripDirections}</ol>`;
-      }
-
+      
       // Draw the Map Matching route as a new layer on the map
       function addRoute(coords) {
         // If a route is already loaded, remove it
