@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Demo: Get started with the Map Matching API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+
+  <body>
+    <div class="kalman">칼만필터 테스트</div>
+    <div id="chartContainer" style="height: 300px; width: 100%"></div>
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  </body>
+
+  <script>
+    /////////////////////////////////// filter ////////////////////////////
+    console.log("시작");
+
+    var lngStep = 0.05;
+    var lngAmplitude = 0.1;
+
+    var latStep = 0.01;
+    var latAmplitude = 1;
+
+    var A1 = 1;
+    var H1 = 1;
+    var Q1 = 0;
+    var R1 = 4;
+    var x1 = 126.65;
+    var P1 = 6;
+
+    function lngKalman(z1) {
+      xp1 = A1 * x1;
+      Pp1 = A1 * P1 * A1 + Q1;
+      K1 = (Pp1 * H1) / (H1 * Pp1 * H1 + R1);
+      x1 = xp1 + K1 * (z1 - H1 * xp1);
+      P1 = Pp1 - K1 * H1 * Pp1;
+
+      return x1;
+    }
+
+    var A2 = 1;
+    var H2 = 1;
+    var Q2 = 0;
+    var R2 = 4;
+    var x2 = 37.44;
+    var P2 = 6;
+
+    function latKalman(z2) {
+      xp2 = A2 * x2;
+      Pp2 = A2 * P2 * A2 + Q2;
+      K2 = (Pp2 * H2) / (H2 * Pp2 * H2 + R2);
+      x2 = xp2 + K2 * (z2 - H2 * xp2);
+      P2 = Pp2 - K2 * H2 * Pp2;
+
+      return x2;
+    }
+
+    Xsaved = [];
+    Zsaved = [];
+    for (var i = 0; i < 100; i++) {
+      const randomLongitude = getLngRandom(126.65 + 0.1 * i);
+      const randomLatitude = getLatRandom(37.44 + 0.1 * i);
+      const filteredLongitude = lngKalman(randomLongitude);
+      const filteredLatitude = latKalman(randomLatitude);
+
+      // 126.65 경도, 37.44 위도
+      var xSet = { x: randomLongitude, y: randomLatitude };
+      var zSet = { x: filteredLongitude, y: filteredLatitude };
+
+      Xsaved.push(xSet);
+      Zsaved.push(zSet);
+    }
+    console.log(Xsaved);
+    console.log(Zsaved);
+
+    function getLngRandom(num) {
+      var integer = Math.floor(Math.random() * 10);
+      if (integer % 2 == 0) {
+        return num + Math.random() * lngAmplitude;
+      } else {
+        return num - Math.random() * lngAmplitude;
+      }
+    }
+
+    function getLatRandom(num) {
+      var integer = Math.floor(Math.random() * 10);
+      if (integer % 2 == 0) {
+        return num + Math.random() * latAmplitude;
+      } else {
+        return num - Math.random() * latAmplitude;
+      }
+    }
+
+    /////////////////////////////////// chart /////////////////////////////
+    window.onload = function () {
+      var chart = new CanvasJS.Chart("chartContainer", {
+        animationEnabled: true,
+        title: {
+          text: "2D Kalman Filter Test",
+        },
+        axisX: {
+          title: "i 값",
+        },
+        axisY: {
+          title: "0~20 랜덤 데이터",
+        },
+        legend: {
+          cursor: "pointer",
+          fontSize: 16,
+          itemclick: toggleDataSeries,
+        },
+        toolTip: {
+          shared: true,
+        },
+        data: [
+          {
+            name: "랜덤 데이터",
+            type: "spline",
+            showInLegend: true,
+            dataPoints: Xsaved,
+          },
+          {
+            name: "칼만 필터 데이터",
+            type: "spline",
+            showInLegend: true,
+            dataPoints: Zsaved,
+          },
+        ],
+      });
+      chart.render();
+
+      function toggleDataSeries(e) {
+        if (
+          typeof e.dataSeries.visible === "undefined" ||
+          e.dataSeries.visible
+        ) {
+          e.dataSeries.visible = false;
+        } else {
+          e.dataSeries.visible = true;
+        }
+        chart.render();
+      }
+    };
+  </script>
+</html>
