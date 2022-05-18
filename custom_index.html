@@ -53,13 +53,13 @@
     <div id="map"></div>
 
     <!-- Create a container for the instructions and directions -->
-    <div class="info-box">
+    <!-- <div class="info-box">
       <p>
         Draw your route using the draw tools on the right. To get the most
         accurate route match, draw points at regular intervals.
       </p>
       <div id="directions"></div>
-    </div>
+    </div> -->
 
     <script>
       // Mapbox 토큰 설정하기
@@ -147,10 +147,22 @@
 
       // 지도에 리스너 설치
       map.on("load", updateRoute);
-      map.on("click", updateRoute);
+      map.on("click", clickRoute);
 
-      // Use the coordinates you just drew to make the Map Matching API request
-      function updateRoute() {
+      var coords = [
+        [126.6520028182398, 37.445300540435426],
+        [126.65461255109909, 37.443638138623655],
+        [126.65843611319724, 37.44296353025106],
+        [126.66059066009325, 37.44106013812579],
+      ];
+
+      function appToWeb(color) {
+        // alert(color);
+        coords.push([126.66218381096888, 37.44134926409927]);
+        updateRoute();
+      }
+
+      function clickRoute() {
         // Overwrite any existing layers
         removeRoute();
 
@@ -163,18 +175,44 @@
 
         console.log("클릭 좌표 시작");
         console.log(data.features[lastFeature].geometry.coordinates);
-        console.log("클릭 좌표 끝");
+
+        console.log("클릭 좌표");
+        var clickCoordItemNum =
+          data.features[lastFeature].geometry.coordinates.length;
+        console.log(
+          data.features[lastFeature].geometry.coordinates[clickCoordItemNum - 1]
+        );
+        coords.push(
+          data.features[lastFeature].geometry.coordinates[clickCoordItemNum - 1]
+        );
+        console.log("클릭클릭");
+
+        const newCoords = coords.join(";");
+
+        // Set the radius for each coordinate pair to 25 meters
+        const radius = coords.map(() => 25);
+        getMatch(newCoords, radius, profile);
+      }
+      // Use the coordinates you just drew to make the Map Matching API request
+      function updateRoute() {
+        // alert("업데이트 부르긴 함");
+        // Overwrite any existing layers
+        removeRoute();
+
+        // profile 의 종류 : walking, driving, cycling, driving-traffic
+        const profile = "driving";
+
+        // Get the coordinates
+        const data = draw.getAll();
+        const lastFeature = data.features.length - 1;
 
         // const coords = data.features[lastFeature].geometry.coordinates;
-        const coords = [
-          [126.6520028182398, 37.445300540435426],
-          [126.65461255109909, 37.443638138623655],
-          [126.65843611319724, 37.44296353025106],
-          [126.66059066009325, 37.44106013812579],
-        ];
-        // console.log("하이하이");
-        // console.log(coords);
-        // console.log("바이바이");
+        // var coords = [
+        //   [126.6520028182398, 37.445300540435426],
+        //   [126.65461255109909, 37.443638138623655],
+        //   [126.65843611319724, 37.44296353025106],
+        //   [126.66059066009325, 37.44106013812579],
+        // ];
 
         // Format the coordinates
         const newCoords = coords.join(";");
@@ -208,10 +246,9 @@
 
         // Draw the route on the map
         addRoute(coords);
-        getInstructions(response.matchings[0]);
+        // getInstructions(response.matchings[0]);
       }
 
-      
       // Draw the Map Matching route as a new layer on the map
       function addRoute(coords) {
         // If a route is already loaded, remove it

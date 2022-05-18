@@ -19,15 +19,15 @@
 
     // Latitude
     var A1 = 1;
-    var H1 = 0.8;
+    var H1 = 0.5;
     var Q1 = 0;
     var R1 = 1;
-    var x1 = 1;
+    var x1 = 37.44;
     var P1 = 1;
 
     // Longitude
     var A2 = 1;
-    var H2 = 1;
+    var H2 = 0.5;
     var Q2 = 0;
     var R2 = 1;
     var x2 = 126.65;
@@ -42,7 +42,7 @@
 
     // Longitude : 126.65, Latitude : 37.44
     // main logic
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 1000; i++) {
       const randomLatData = getRandomLat() + 0.1 * i;
       const kalmanLatData = useKalmanLat(randomLatData);
       var xSet = { x: i, y: randomLatData };
@@ -68,7 +68,7 @@
     console.log(Zsaved);
 
     function getRandomLat() {
-      return gaussianRandom() * 0.01;
+      return 37.44 * gaussianRandom() * 0.01;
     }
 
     function useKalmanLat(z1) {
@@ -81,7 +81,7 @@
     }
 
     function getRandomLng() {
-      return 126.65 + gaussianRandom() * 0.0001;
+      return 126.65 * gaussianRandom() * 0.01;
     }
 
     function useKalmanLng(z2) {
