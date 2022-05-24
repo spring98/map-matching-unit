@@ -150,16 +150,59 @@
       map.on("click", clickRoute);
 
       var coords = [
-        [126.6520028182398, 37.445300540435426],
-        [126.65461255109909, 37.443638138623655],
-        [126.65843611319724, 37.44296353025106],
-        [126.66059066009325, 37.44106013812579],
+        // [126.6520028182398, 37.445300540435426],
+        // [126.65461255109909, 37.443638138623655],
+        // [126.65843611319724, 37.44296353025106],
+        // [126.66059066009325, 37.44106013812579],
       ];
 
-      function appToWeb(color) {
-        // alert(color);
-        coords.push([126.66218381096888, 37.44134926409927]);
+      function appToWeb(lng, lat, origLng, origLat, preLng, preLat) {
+        var preLongtitude = parseFloat(preLng);
+        var preLatitude = parseFloat(preLat);
+
+        var longtitude = parseFloat(lng);
+        var latitude = parseFloat(lat);
+
+        var origLongtitude = parseFloat(origLng);
+        var origLatitude = parseFloat(origLat);
+
+        var deltaLng = longtitude - preLongtitude;
+        var deltaLat = latitude - preLatitude;
+
+        var currentDegree = calcAngleDegrees(deltaLng, deltaLat);
+        var desiredDegree = 90 - currentDegree;
+
+        onTapMarker.postMessage(desiredDegree);
+
+        // map.rotateTo(desiredDegree);
+        map.setBearing(desiredDegree);
+        map.panTo([longtitude, latitude], { duration: 1000 });
+
+        coords.push([longtitude, latitude]);
+        if (coords.length > 50) {
+          coords.shift();
+        }
+
+        // Set marker options.
+        const marker = new mapboxgl.Marker({
+          color: "#FFFFFF",
+          draggable: false,
+        })
+          .setLngLat([longtitude, latitude])
+          .addTo(map);
+
+        const blackMarker = new mapboxgl.Marker({
+          color: "#000000",
+          draggable: false,
+        })
+          .setLngLat([origLongtitude, origLatitude])
+          .addTo(map);
+
         updateRoute();
+      }
+
+      function calcAngleDegrees(x, y) {
+        return (Math.atan2(y, x) * 180) / Math.PI;
       }
 
       function clickRoute() {
@@ -173,19 +216,37 @@
         const data = draw.getAll();
         const lastFeature = data.features.length - 1;
 
-        console.log("클릭 좌표 시작");
-        console.log(data.features[lastFeature].geometry.coordinates);
+        // console.log("클릭 좌표 시작");
+        // console.log(data.features[lastFeature].geometry.coordinates);
 
         console.log("클릭 좌표");
         var clickCoordItemNum =
           data.features[lastFeature].geometry.coordinates.length;
-        console.log(
-          data.features[lastFeature].geometry.coordinates[clickCoordItemNum - 1]
-        );
+        // console.log(
+        //   data.features[lastFeature].geometry.coordinates[clickCoordItemNum - 1]
+        // );
         coords.push(
           data.features[lastFeature].geometry.coordinates[clickCoordItemNum - 1]
         );
-        console.log("클릭클릭");
+
+        if (coords.length >= 3) {
+          console.log("이전 값 : ", coords[coords.length - 2]);
+          console.log("현재 값 : ", coords[coords.length - 1]);
+          var preCoord = coords[coords.length - 2];
+          var currentCoord = coords[coords.length - 1];
+
+          var deltaLng = currentCoord[0] - preCoord[0];
+          var deltaLat = currentCoord[1] - preCoord[1];
+
+          var currentDegree = calcAngleDegrees(deltaLng, deltaLat);
+          var desiredDegree = 90 - currentDegree;
+
+          console.log(currentDegree);
+          console.log(desiredDegree);
+
+          // map.rotateTo(desiredDegree);
+          map.setBearing(desiredDegree);
+        }
 
         const newCoords = coords.join(";");
 
@@ -193,6 +254,8 @@
         const radius = coords.map(() => 25);
         getMatch(newCoords, radius, profile);
       }
+
+      var flag = 0;
       // Use the coordinates you just drew to make the Map Matching API request
       function updateRoute() {
         // alert("업데이트 부르긴 함");
@@ -219,7 +282,11 @@
 
         // Set the radius for each coordinate pair to 25 meters
         const radius = coords.map(() => 25);
-        getMatch(newCoords, radius, profile);
+        console.log(flag);
+        if (flag >= 2) {
+          getMatch(newCoords, radius, profile);
+        }
+        flag = flag + 1;
       }
 
       // Make a Map Matching request
